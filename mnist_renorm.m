@@ -5,8 +5,7 @@ opts.batchNormalization = false ;
 opts.batchRenormalization = false ;
 opts.train.batchSize = 100 ;
 opts.train.gpus = [] ;
-eeeeeeeeeeecontinue = true ;
-rm(x, g, b, clips, 'moments', moments, varargin{:
+opts.train.continue = true ;
 
 [opts, varargin] = vl_argparse(opts, varargin) ;
 
@@ -68,11 +67,11 @@ if rn, x = vl_nnbrenorm_auto(x, clips) ; end
 x = vl_nnpool(x, 2, 'stride', 2) ;
 x = vl_nnconv(x, 'size', [5, 5, 20, 50], 'weightScale', 0.01) ;
 if bn, x = vl_nnbnorm(x) ; end
-if rn, x = vl_nnbrenorm_auto(x) ; end
+if rn, x = vl_nnbrenorm_auto(x, clips) ; end
 x = vl_nnpool(x, 2, 'stride', 2) ;
 x = vl_nnconv(x, 'size', [4, 4, 50, 500], 'weightScale', 0.01) ;
 if bn, x = vl_nnbnorm(x) ; end
-if rn, x = vl_nnbrenorm_auto(x) ; end
+if rn, x = vl_nnbrenorm_auto(x, clips) ; end
 x = vl_nnrelu(x) ;
 x = vl_nnconv(x, 'size', [1, 1, 500, 10], 'weightScale', 0.01) ;
 
@@ -81,7 +80,7 @@ x = vl_nnconv(x, 'size', [1, 1, 500, 10], 'weightScale', 0.01) ;
 
 % diagnose all Params associated with conv layers (1 depth up from them)
 convs = x.find(@vl_nnconv) ;
-convParams = cellfun(@(x) x.find('Param', 'depth', 1), convs, 'Uniform', false) ;
+convParams = cellfun(@(x) {x.find('Param', 'depth', 1)}, convs) ;
 Layer.setDiagnostics(convParams, true) ;
 
 objective = vl_nnloss(x, labels, 'loss', 'softmaxlog') ;
@@ -104,7 +103,8 @@ function inputs = getBatch(imdb, batch)
 % --------------------------------------------------------------------
 images = imdb.images.data(:,:,:,batch) ;
 labels = imdb.images.labels(1,batch) ;
-inputs = {'images', images, 'labels', labels} ;
+clips = [1 0] ;
+inputs = {'images', images, 'labels', labels, 'clips', clips} ;
 
 % --------------------------------------------------------------------
 function imdb = getMnistImdb(opts)

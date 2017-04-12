@@ -49,27 +49,21 @@ function layer = vl_nnbrenorm_auto(varargin)
   assert(numel(posArgs) >= 1 && numel(posArgs) <= 4, ...
     'Must specify 1 to 4 inputs to VL_NNBRENORM, plus any name-value pairs.') ;
   
-  if numel(posArgs) < 2
+  if numel(posArgs) < 3
     % create scale param. will be initialized with proper number of
     % channels on first run by the wrapper.
-    posArgs{2} = Param('value', single(1), ...
+    g = Param('value', single(1), ...
                       'learningRate', opts.learningRate(1), ...
                       'weightDecay', opts.weightDecay(1)) ;
   end
   
-  if numel(posArgs) < 3
+  if numel(posArgs) < 4
     % create bias param
-    posArgs{3} = Param('value', single(0), ...
+    b = Param('value', single(0), ...
                       'learningRate', opts.learningRate(2), ...
                       'weightDecay', opts.weightDecay(2)) ;
   end
 
-  if numel(posArgs) < 4
-    % create clipping limits for r and d
-    posArgs{4} = Param('value', single([1 0]), ...
-                      'learningRate', single(0), ...
-                      'weightDecay', single(0)) ;
-  end
   
   if ~isempty(opts.moments)
     moments = opts.moments ;
@@ -93,16 +87,8 @@ function layer = vl_nnbrenorm_auto(varargin)
     strcmp(moments.trainMethod, 'average')), ...
     'Moments must be constant or a Param with trainMethod = ''average''.') ;
   
-  % create Input('testMode') to know when in test mode
-  %testMode = opts.testMode ;  % might override with boolean constant
-  %if isempty(testMode)
-  %  testMode = Input('testMode') ;
-  %end
-  
-  % create layer.
-  % in normal mode, pass in moments so its derivatives are expected.
-  layer = Layer(@vl_nnbrenorm_wrapper, posArgs{:}, moments, brenormOpts{:}) ;
-  
+  x = posArgs{1} ;
+  clips = posArgs{2} ;
+  layer = Layer(@vl_nnbrenorm_wrapper, x, g, b, moments, clips, brenormOpts{:}) ;
   layer.numInputDer = 4 ;
-  
 end

@@ -1,4 +1,5 @@
-function [y, dzdg, dzdb, moments] = vl_nnbrenorm(x, g, b, clips, varargin) 
+function [y, dzdg, dzdb, moments] = vl_nnbrenorm(x, g, b, ...
+                                              moments, clips, varargin) 
 %VL_NNBRENORM CNN batch renormalisation.
 %   Y = VL_NNBRENORM(X,G,B,R,D) applies batch renormalization to the input
 %   X. Batch renormalization is defined as:
@@ -27,10 +28,7 @@ function [y, dzdg, dzdb, moments] = vl_nnbrenorm(x, g, b, clips, varargin)
 %  `Batch Renormalization: Towards Reducing Minibatch Dependence in
 %   Batch-Normalized Models` by Sergey Ioffe, 2017
 
-opts.moments = [] ;
-[opts, dzdy] = vl_argparsepos(opts, varargin) ;
-
-moments = opts.moments ;
+[opts, dzdy] = vl_argparsepos(struct(), varargin) ;
 
 % unpack parameters
 epsilon = 1e-4 ;
@@ -77,12 +75,7 @@ else
   y = dzdx ;
   dzdg = chanSum(dzdx_hat .* dzdy) ;
   dzdb = chanSum(dzdy) ;
-end
-
-% compute moments
-if nargout == 2
-		moments = horzcat(squeeze(mu), squeeze(sigma)) ;
-    dzdg = moments ;
+  moments = horzcat(squeeze(mu), squeeze(sigma)) ;
 end
 
 % ------------------------
