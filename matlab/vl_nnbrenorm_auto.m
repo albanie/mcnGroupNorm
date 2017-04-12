@@ -1,25 +1,26 @@
-function layer = vl_nnrebnorm(varargin)
-%VL_NNBRENORM Additional options for vl_nnrebnorm (CNN batch renormalisation)
-%   Y = Layer.vl_nnbrenorm(X) applies batch normalization to the input X,
-%   creating all needed parameters automatically. See help vl_nnrebnorm for
+function layer = vl_nnbrenorm_auto(varargin)
+%VL_NNREBNORM_AUTO Additional options for vl_nnbrenorm (CNN batch normalisation)
+%   Y = Layer.vl_nnbrenorm(X) applies batch renormalization to the input X,
+%   creating all needed parameters automatically. See help vl_nnbrenorm for
 %   more details.
 %
-%   This method overloads MatConvNet's vl_nnrebnorm function for Layer
+%   This method overloads the vl_nnbrenorm function for Layer
 %   objects, so that instead of executing vl_nnbrenorm, a new Layer object is
 %   returned. Note also that, to maintain a uniform interface, during
 %   network evaluation vl_nnbrenorm_wrapper is used instead of vl_nnbrenorm.
 %
-%   Y = Layer.vl_nnrebnorm(X, G, B) specifies the gains G and biases B. These
-%   may be other Layers, including Params, or constants.
+%   Y = Layer.vl_nnbrenorm(X, G, B, CLIPS) specifies the gains G, biases B, 
+%   and clipping limits for `r` and `d`, CLIPS.  These may be other Layers, 
+%   including Params, or constants.
 %
-%   Y = Layer.vl_nnrebnorm(..., 'moments', M) or Y = Layer.vl_nnbrenorm(..., M)
+%   Y = Layer.vl_nnbrenorm(..., 'moments', M) or Y = Layer.vl_nnbrenorm(..., M)
 %   specifies the moments M. Note that the "derivative" for M returned by
-%   vl_nnbnorm is not a proper derivative, but an update for a moving
+%   vl_nnbrenorm is not a proper derivative, but an update for a moving
 %   average. As such, only constants or Params with trainMethod = 'average'
 %   are supported.
 %
-%   In addition to those defined by MatConvNet's vl_nnbrenorm, the overloaded
-%   VL_NNBNORM(..., 'option', value, ...) accepts the following options:
+%   In addition to those defined by vl_nnbrenorm, the overloaded
+%   VL_NNBRENORM(..., 'option', value, ...) accepts the following options:
 %
 %   `learningRate`:: [2 1 0.1]
 %     Factor used to adjust the created Params' learning rate. Can specify
@@ -28,22 +29,12 @@ function layer = vl_nnrebnorm(varargin)
 %   `weightDecay`:: 0
 %     Factor used to adjust the created Params' weight decay. Can specify
 %     separate weight decays for G, B and M as a 3-elements vector.
-%
-%   `testMode`:: []
-%     By default, the layer uses batch statistics when evaluating the
-%     network in training mode, and uses the moments parameters M when in
-%     test mode.
-%     If `testMode` is true, the layer will always run in test mode, and if
-%     false, it will always run in training mode.
 
-% Copyright (C) 2016 Joao F. Henriques.
+% Copyright (C) 2017 Samuel Albanie and Joao F. Henriques.
 % All rights reserved.
-%
-% This file is part of the VLFeat library and is made available under
-% the terms of the BSD license (see the COPYING file).
 
   % parse options. note the defaults for brenorm's Params are set here.
-  opts = struct('learningRate', [2 1 0.1], 'weightDecay', 0, 'moments', [] ) ;
+  opts = struct('learningRate', [2 1 0.1], 'weightDecay', 0, 'moments', []) ;
   [opts, posArgs, brenormOpts] = vl_argparsepos(opts, varargin) ;
   
   if isscalar(opts.learningRate)
@@ -56,8 +47,7 @@ function layer = vl_nnrebnorm(varargin)
   
   % create any unspecified parameters (scale, bias and moments).
   assert(numel(posArgs) >= 1 && numel(posArgs) <= 4, ...
-    strcat('Must specify between 1 and 4 inputs to VL_NNBNORM, ', ...
-     'plus any name-value pairs.')) ;
+    'Must specify 1 to 4 inputs to VL_NNBRENORM, plus any name-value pairs.') ;
   
   if numel(posArgs) < 2
     % create scale param. will be initialized with proper number of
@@ -73,6 +63,13 @@ function layer = vl_nnrebnorm(varargin)
                       'learningRate', opts.learningRate(2), ...
                       'weightDecay', opts.weightDecay(2)) ;
   end
+
+  if numel(posArgs) < 4
+    % create clipping limits for r and d
+    posArgs{4} = Param('value', single([1 0]), ...
+                      'learningRate', single(0), ...
+                      'weightDecay', single(0)) ;
+  end
   
   if ~isempty(opts.moments)
     moments = opts.moments ;
@@ -80,9 +77,9 @@ function layer = vl_nnrebnorm(varargin)
     % 'moments' name-value pair not specified.
     % check if the moments were passed in as the 4th argument (alternative
     % syntax)
-    if numel(posArgs) > 3
-      moments = posArgs{4} ;
-      posArgs(4) = [] ;  % remove from list
+    if numel(posArgs) > 4
+      moments = posArgs{5} ;
+      posArgs(5) = [] ;  % remove from list
     else
       % create moments param. note the training method is 'average'.
       moments = Param('value', single(0), ...
@@ -97,16 +94,15 @@ function layer = vl_nnrebnorm(varargin)
     'Moments must be constant or a Param with trainMethod = ''average''.') ;
   
   % create Input('testMode') to know when in test mode
-  testMode = opts.testMode ;  % might override with boolean constant
-  if isempty(testMode)
-    testMode = Input('testMode') ;
-  end
+  %testMode = opts.testMode ;  % might override with boolean constant
+  %if isempty(testMode)
+  %  testMode = Input('testMode') ;
+  %end
   
   % create layer.
   % in normal mode, pass in moments so its derivatives are expected.
-  layer = Layer(@vl_nnrebnorm_wrapper, posArgs{:}, moments, testMode, bnormOpts{:}) ;
+  layer = Layer(@vl_nnbrenorm_wrapper, posArgs{:}, moments, brenormOpts{:}) ;
   
   layer.numInputDer = 4 ;
   
 end
-

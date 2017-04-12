@@ -1,8 +1,9 @@
-function [y, dzdg, dzdb, moments] = vl_nnbnorm_wrapper(x, g, b, moments, test, varargin)
-%VL_NNBNORM_WRAPPER AutoNN wrapper for MatConvNet's vl_nnbnorm
+function [y, dzdg, dzdb, moments] = vl_nnbrenorm_wrapper(x, g, b, ...
+                                                clips, moments, varargin)
+%VL_NNBNORM_WRAPPER AutoNN wrapper for MatConvNet's vl_nnbrenorm
 %   VL_NNBNORM has a non-standard interface (returns a derivative for the
 %   moments, even though they are not an input), so we must wrap it.
-%   Layer.vl_nnbnorm replaces a standard VL_NNBNORM call with this one.
+%   Layer.vl_nnbrenorm replaces a standard VL_NNBNORM call with this one.
 %
 %   This also lets us supports nice features like setting the parameter
 %   sizes automatically (e.g. building a net with VL_NNBNORM(X) is valid).
@@ -18,17 +19,18 @@ function [y, dzdg, dzdb, moments] = vl_nnbnorm_wrapper(x, g, b, moments, test, v
   % knowledge of the number of channels. scalars also permit gradient
   % accumulation with any tensor shape (in CNN_TRAIN_AUTONN).
   if isscalar(g)
-    g(1:size(x,3),1) = g ;
+    g(1,1,1:size(x,3)) = g ;
   end
   if isscalar(b)
-    b(1:size(x,3),1) = b ;
+    b(1,1,1:size(x,3)) = b ;
   end
   if isscalar(moments)
     moments(1:size(x,3),1:2) = moments ;
   end
 
   if isempty(x)
-    % vl_nnbnorm throws an error on empty inputs. however, these can happen
+
+    % vl_nnbrenorm throws an error on empty inputs. however, these can happen
     % in some dynamic architectures, so handle this case.
     y = zeros(size(x), 'like', x) ;
     if nargout > 1
@@ -39,30 +41,32 @@ function [y, dzdg, dzdb, moments] = vl_nnbnorm_wrapper(x, g, b, moments, test, v
     return
   end
 
-  if ~test
-    if numel(varargin) >= 1 && isnumeric(varargin{1})
-      % training backward mode
-      [y, dzdg, dzdb, moments] = vl_nnbnorm(x, g, b, varargin{:}) ;
+  %if ~test
+    %if numel(varargin) >= 1 && isnumeric(varargin{1})
+      %% training backward mode
+      %[y, dzdg, dzdb, moments] = vl_nnbrenorm(x, g, b, varargin{:}) ;
       
-      % multiply the moments update by the number of images in the batch
-      % this is required to make the update additive for subbatches
-      % and will eventually be normalized away
-      moments = moments * size(x, 4) ;
-    else
-      % training forward mode
-      y = vl_nnbnorm(x, g, b, varargin{:}) ;
-    end
-  else
+      %% multiply the moments update by the number of images in the batch
+      %% this is required to make the update additive for subbatches
+      %% and will eventually be normalized away
+      %moments = moments * size(x, 4) ;
+    %else
+      %% training forward mode
+      %y = vl_nnbrenorm(x, g, b, varargin{:}) ;
+    %end
+  %else
+
     % test mode, pass in moments
     if numel(varargin) >= 1 && isnumeric(varargin{1})
-      % test backward mode (to implement e.g. bnorm frozen during training)
-      [y, dzdg, dzdb, moments] = vl_nnbnorm(x, g, b, varargin{1}, 'moments', moments, varargin{2:end}) ;
+
+      % test backward mode (to implement e.g. brenorm frozen during training)
+      [y, dzdg, dzdb, moments] = vl_nnbrenorm(x, g, b, clips, varargin{1}, ...
+                                  'moments', moments, varargin{2:end}) ;
       moments = moments * size(x, 4) ;
     else
-      % test forward mode
-      y = vl_nnbnorm(x, g, b, 'moments', moments, varargin{:}) ;
+      % forward mode
+      y = vl_nnbrenorm(x, g, b, clips, 'moments', moments, varargin{:}) ;
     end
-  end
-
+%  end
 end
 

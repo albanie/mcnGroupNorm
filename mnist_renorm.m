@@ -4,6 +4,9 @@ function [net, info] = mnist_renorm(varargin)
 opts.batchNormalization = false ;
 opts.batchRenormalization = false ;
 opts.train.batchSize = 100 ;
+opts.train.gpus = [] ;
+eeeeeeeeeeecontinue = true ;
+rm(x, g, b, clips, 'moments', moments, varargin{:
 
 [opts, varargin] = vl_argparse(opts, varargin) ;
 
@@ -12,8 +15,6 @@ rn = opts.batchRenormalization ;
 
 
 opts.train.numEpochs = 20 ;
-opts.train.continue = true ;
-opts.train.gpus = [] ;
 
 if bn
   sfx = '-bn' ;
@@ -27,7 +28,7 @@ sfx2 = sprintf('-bs-%d', opts.train.batchSize) ;
 opts.expDir = fullfile(vl_rootnn, 'data/mnist-exps', ...
                             ['mnist-baseline' sfx sfx2]) ;
 
-opts.dataDir = fullfile(vl_rootnn, 'data', 'mnist') ;
+opts.dataDir = fullfile(vl_rootnn, 'data', 'datasets', 'mnist') ;
 opts.imdbPath = fullfile(opts.expDir, 'imdb.mat');
 
 if opts.batchNormalization
@@ -59,18 +60,19 @@ rng(0) ;
 
 images = Input('gpu', true) ;
 labels = Input() ;
+clips = Input() ; % clipping for batch renomalization
 
 x = vl_nnconv(images, 'size', [5, 5, 1, 20], 'weightScale', 0.01) ;
 if bn, x = vl_nnbnorm(x) ; end
-if rn, x = vl_nnbrenorm(x) ; end
+if rn, x = vl_nnbrenorm_auto(x, clips) ; end
 x = vl_nnpool(x, 2, 'stride', 2) ;
 x = vl_nnconv(x, 'size', [5, 5, 20, 50], 'weightScale', 0.01) ;
 if bn, x = vl_nnbnorm(x) ; end
-if rn, x = vl_nnbrenorm(x) ; end
+if rn, x = vl_nnbrenorm_auto(x) ; end
 x = vl_nnpool(x, 2, 'stride', 2) ;
 x = vl_nnconv(x, 'size', [4, 4, 50, 500], 'weightScale', 0.01) ;
 if bn, x = vl_nnbnorm(x) ; end
-if rn, x = vl_nnbrenorm(x) ; end
+if rn, x = vl_nnbrenorm_auto(x) ; end
 x = vl_nnrelu(x) ;
 x = vl_nnconv(x, 'size', [1, 1, 500, 10], 'weightScale', 0.01) ;
 
