@@ -29,12 +29,20 @@ function layer = vl_nnbrenorm_auto(varargin)
 %   `weightDecay`:: 0
 %     Factor used to adjust the created Params' weight decay. Can specify
 %     separate weight decays for G, B and M as a 3-elements vector.
+%
+%   `testMode`:: []
+%     During training mode, the layer uses a combination of minibatch 
+%     statistics and moments. In test mode, only the moments parameters
+%     are used.
 
-% Copyright (C) 2017 Samuel Albanie and Joao F. Henriques.
+
+% Copyright (C) 2017 Samuel Albanie 
+% (based on the vl_nnbnorm function by Joao F. Henriques)
 % All rights reserved.
 
   % parse options. note the defaults for brenorm's Params are set here.
-  opts = struct('learningRate', [2 1 0.1], 'weightDecay', 0, 'moments', []) ;
+  opts = struct('learningRate', [2 1 0.1], 'weightDecay', 0, ...
+                 'moments', [], 'testMode', []) ;
   [opts, posArgs, brenormOpts] = vl_argparsepos(opts, varargin) ;
   
   if isscalar(opts.learningRate)
@@ -86,9 +94,16 @@ function layer = vl_nnbrenorm_auto(varargin)
   assert(isnumeric(moments) || (isa(moments, 'Param') && ...
     strcmp(moments.trainMethod, 'average')), ...
     'Moments must be constant or a Param with trainMethod = ''average''.') ;
+
+  % create Input('testMode') to know when in test mode
+  testMode = opts.testMode ;  % might override with boolean constant
+  if isempty(testMode)
+    testMode = Input('testMode') ;
+  end
   
   x = posArgs{1} ;
   clips = posArgs{2} ;
-  layer = Layer(@vl_nnbrenorm_wrapper, x, g, b, moments, clips, brenormOpts{:}) ;
+  layer = Layer(@vl_nnbrenorm_wrapper, x, g, b, moments, clips, ...
+                                                   testMode, brenormOpts{:}) ;
   layer.numInputDer = 4 ;
 end

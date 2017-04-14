@@ -1,5 +1,5 @@
 function [y, dzdg, dzdb, moments] = vl_nnbrenorm_wrapper(x, g, b, ...
-                                              moments, clips, varargin)
+                                              moments, clips, test, varargin)
 %VL_NNBNORM_WRAPPER AutoNN wrapper for MatConvNet's vl_nnbrenorm
 %   VL_NNBNORM has a non-standard interface (returns a derivative for the
 %   moments, even though they are not an input), so we must wrap it.
@@ -32,10 +32,10 @@ function [y, dzdg, dzdb, moments] = vl_nnbrenorm_wrapper(x, g, b, ...
   end
 
   if isempty(dzdy)
-    y = vl_nnbrenorm(x, g, b, moments, clips, varargin{:}) ;
+    y = vl_nnbrenorm(x, g, b, moments, clips, test, varargin{:}) ;
   else
     [y, dzdg, dzdb, moments] = vl_nnbrenorm(x, g, b, moments, clips, ...
-                                            dzdy{1}, varargin{2:end}) ;
+                                            test, dzdy{1}, varargin{2:end}) ;
     moments = moments * size(x, 4) ;
   end
 end

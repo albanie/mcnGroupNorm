@@ -1,5 +1,5 @@
-function [y, dzdg, dzdb, moments] = vl_nnbrenorm(x, g, b, ...
-                                              moments, clips, varargin) 
+function [y, dzdg, dzdb, moments] = vl_nnbrenorm(x, g, b, moments, ...
+                                                 clips, test, varargin) 
 %VL_NNBRENORM CNN batch renormalisation.
 %   Y = VL_NNBRENORM(X,G,B,R,D) applies batch renormalization to the input
 %   X. Batch renormalization is defined as:
@@ -38,17 +38,23 @@ dMax = clips(2) ;
 rolling_mu = permute(moments(:,1), [3 2 1]) ;
 rolling_sigma = permute(moments(:,2), [3 2 1]) ;
 
-% first compute the statistics per channel for the current 
-% minibatch and normalize
-mu = chanAvg(x) ;
-sigma2 = chanAvg(bsxfun(@minus, x, mu).^ 2) ;
-sigma = sqrt(sigma2 + epsilon) ;
-x_hat_ = bsxfun(@rdivide, bsxfun(@minus, x, mu), sigma) ;
+if ~test
+  % first compute the statistics per channel for the current 
+  % minibatch and normalize
+  mu = chanAvg(x) ;
+  sigma2 = chanAvg(bsxfun(@minus, x, mu).^ 2) ;
+  sigma = sqrt(sigma2 + epsilon) ;
 
-% then "renormalize"
-r = bsxfun(@min, bsxfun(@max, sigma ./ rolling_sigma, 1 / rMax), rMax) ;
-d = bsxfun(@min, bsxfun(@max,(mu - rolling_mu)./rolling_sigma, -dMax), dMax) ;
-x_hat = bsxfun(@plus, bsxfun(@times, x_hat_, r), d) ;
+  x_hat_ = bsxfun(@rdivide, bsxfun(@minus, x, mu), sigma) ;
+
+  % then "renormalize"
+  r = bsxfun(@min, bsxfun(@max, sigma ./ rolling_sigma, 1 / rMax), rMax) ;
+  d = bsxfun(@min, bsxfun(@max, (mu - rolling_mu)./rolling_sigma, ...
+                                                           -dMax), dMax) ;
+  x_hat = bsxfun(@plus, bsxfun(@times, x_hat_, r), d) ;
+else
+  x_hat = bsxfun(@rdivide, bsxfun(@minus, x, rolling_mu), rolling_sigma) ;
+end
 
 if isempty(dzdy)
 	% apply gain
@@ -60,12 +66,13 @@ else
   % precompute some common terms 
   t1 = bsxfun(@minus, x, mu) ;
   t2 = bsxfun(@rdivide, 1, sqrt(sigma2 + epsilon)) ;
-  t3 = bsxfun(@rdivide, r, sigma2) ;
+  t3 = bsxfun(@rdivide, r, sigma) ;
+  t4 = bsxfun(@rdivide, r, sigma2) ;
   sz = size(x) ; m = prod([sz(1:2) sz(4)]) ;
   dzdy = dzdy{1} ;
 
   dzdx_hat = bsxfun(@times, dzdy, g) ;
-  dzdsigma = chanSum(dzdx_hat .* bsxfun(@times, t1, -t3)) ;
+  dzdsigma = chanSum(dzdx_hat .* bsxfun(@times, t1, -t4)) ;
   dzdmu = chanSum(bsxfun(@times, dzdx_hat, -t3)) ;
 
   t4 = bsxfun(@times, dzdx_hat, t3) + ...
@@ -73,7 +80,7 @@ else
   dzdx = bsxfun(@plus, t4, dzdmu * (1/m)) ;
                                     
   y = dzdx ;
-  dzdg = chanSum(dzdx_hat .* dzdy) ;
+  dzdg = chanSum(x_hat .* dzdy) ;
   dzdb = chanSum(dzdy) ;
   moments = horzcat(squeeze(mu), squeeze(sigma)) ;
 end

@@ -1,36 +1,38 @@
 function [net, info] = mnist_renorm(varargin)
-% CNN_MNIST_AUTONN  Demonstrates MatConNet on MNIST.
+% MNIST_RENORM runs batch renormalization experiments on MNIST
 
 opts.batchNormalization = false ;
 opts.batchRenormalization = false ;
 opts.train.batchSize = 100 ;
 opts.train.gpus = [] ;
 opts.train.continue = true ;
+opts.train.numEpochs = 30 ;
+
+% parameters used by batch renormalization
+opts.clips = [1 0] ; 
+opts.alpha = 0.01 ;
+opts.expRoot = fullfile(vl_rootnn, 'data/mnist-exps') ;
 
 [opts, varargin] = vl_argparse(opts, varargin) ;
 
 bn = opts.batchNormalization ;
 rn = opts.batchRenormalization ;
 
-
-opts.train.numEpochs = 20 ;
-
 if bn
   sfx = '-bn' ;
 elseif rn
-  sfx = '-bn' ;
+  sfx = sprintf('-rn-%g', opts.alpha) ;
 else
   sfx = '' ;
 end
 
 sfx2 = sprintf('-bs-%d', opts.train.batchSize) ;
-opts.expDir = fullfile(vl_rootnn, 'data/mnist-exps', ...
-                            ['mnist-baseline' sfx sfx2]) ;
+opts.expDir = fullfile(opts.expRoot, ['mnist-baseline' sfx sfx2]) ;
 
 opts.dataDir = fullfile(vl_rootnn, 'data', 'datasets', 'mnist') ;
 opts.imdbPath = fullfile(opts.expDir, 'imdb.mat');
 
-if opts.batchNormalization
+if bn || rn
   opts.train.learningRate = 0.01 ;
 else
   opts.train.learningRate = 0.001 ;
@@ -59,19 +61,27 @@ rng(0) ;
 
 images = Input('gpu', true) ;
 labels = Input() ;
-clips = Input() ; % clipping for batch renomalization
 
+if rn
+  % clipping for batch renomalization
+  clips = Input() ; 
+  renormLR = {'learningRate', [2 1 opts.alpha]} ;
+
+  % initialise epoch count to 1
+  [~] = getBatch(imdb, [2], opts, 'resetEpoch', 1) ;
+end
+  
 x = vl_nnconv(images, 'size', [5, 5, 1, 20], 'weightScale', 0.01) ;
 if bn, x = vl_nnbnorm(x) ; end
-if rn, x = vl_nnbrenorm_auto(x, clips) ; end
+if rn, x = vl_nnbrenorm_auto(x, clips, renormLR{:}) ; end
 x = vl_nnpool(x, 2, 'stride', 2) ;
 x = vl_nnconv(x, 'size', [5, 5, 20, 50], 'weightScale', 0.01) ;
 if bn, x = vl_nnbnorm(x) ; end
-if rn, x = vl_nnbrenorm_auto(x, clips) ; end
+if rn, x = vl_nnbrenorm_auto(x, clips, renormLR{:}) ; end
 x = vl_nnpool(x, 2, 'stride', 2) ;
 x = vl_nnconv(x, 'size', [4, 4, 50, 500], 'weightScale', 0.01) ;
 if bn, x = vl_nnbnorm(x) ; end
-if rn, x = vl_nnbrenorm_auto(x, clips) ; end
+if rn, x = vl_nnbrenorm_auto(x, clips, renormLR{:}) ; end
 x = vl_nnrelu(x) ;
 x = vl_nnconv(x, 'size', [1, 1, 500, 10], 'weightScale', 0.01) ;
 
@@ -95,16 +105,33 @@ net = Net(objective, error) ;  % compile network
 %                                                                Train
 % --------------------------------------------------------------------
 
-[net, info] = cnn_train_autonn(net, imdb, @getBatch, ...
+[net, info] = cnn_train_autonn(net, imdb, @(x,y) getBatch(x,y, opts), ...
   opts.train, 'val', find(imdb.images.set == 3)) ;
 
 % --------------------------------------------------------------------
-function inputs = getBatch(imdb, batch)
+function inputs = getBatch(imdb, batch, opts, varargin)
 % --------------------------------------------------------------------
+opts.resetEpoch = false ;
+opts = vl_argparse(opts, varargin) ;
+
 images = imdb.images.data(:,:,:,batch) ;
 labels = imdb.images.labels(1,batch) ;
-clips = [1 0] ;
-inputs = {'images', images, 'labels', labels, 'clips', clips} ;
+inputs = {'images', images, 'labels', labels} ;
+
+if opts.batchRenormalization
+  % hack to approximate the epoch number without modifying cnn_train_autonn
+  persistent epochNum 
+  if opts.resetEpoch
+    epochNum = 1 ;
+  else
+    if ismember(1,batch)
+      epochNum = epochNum + 1 ;
+    end
+  end
+
+  clips = opts.clips(epochNum,:) ;
+  inputs = {inputs{:}, 'clips', clips} ;
+end
 
 % --------------------------------------------------------------------
 function imdb = getMnistImdb(opts)
