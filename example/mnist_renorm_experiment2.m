@@ -31,7 +31,7 @@ clips = [ warmup ; steady ; last ] ;
 alphas = [0.1 0.01 0.001] ;
 
 results_big = runner(256, alphas, clips) ;
-results_mid = runner(128, alphas, clips) ;
+results_medium = runner(128, alphas, clips) ;
 results_small = runner(64, alphas, clips) ;
 results_tiny = runner(32, alphas, clips) ;
 results_mini = runner(16, alphas, clips) ;

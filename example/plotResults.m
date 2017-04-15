@@ -13,6 +13,7 @@ h = legend(results(:).name) ;
 set(h,'color','none');
 batchSize = results(1).batchSize ;
 title(sprintf('objective-(bs%d)', batchSize)) ;
+ylim([0 0.1]) ;
 subplot(1,2,2) ;
 hold all ;
 for i = 1:numel(results)
@@ -23,6 +24,7 @@ grid on ;
 xlabel('Training samples [x 10^3]'); ylabel('error') ;
 set(h,'color','none') ;
 title(sprintf('error-(bs%d)', batchSize)) ;
+ylim([0 0.05]) ;
 drawnow ;
 
 % this is a function for plotting figures in the terminal
