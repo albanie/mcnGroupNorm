@@ -12,8 +12,9 @@ vl_contrib('install', 'mcnBReNorm', 'contribUrl', 'github.com/albanie/matconvnet
 vl_contrib('setup', 'mcnBReNorm', 'contribUrl', 'github.com/albanie/matconvnet-contrib-test/') ;
 ```
 
-The example experiments use the [autonn module]() (although this is not 
-required to use the `vl_nnbrenorm` function), which can be installed as follows:
+The example experiments use the [autonn](https://github.com/vlfeat/autonn) 
+module (although this is not required to use the `vl_nnbrenorm` function), 
+which can be installed as follows:
 
 ```
 vl_contrib('install', 'autonn') ;
@@ -22,24 +23,30 @@ vl_contrib('setup', 'autonn') ;
 
 ### Experiments
 
-Our first goal is to verify the first experiment in the paper i.e. that batch 
-renormalization does actively make things worse when we are training with 
-reasonably large batch sizes.  In the experiment below, we train three simple 
-networks - one with no feature normalization, one with batch normalization and 
-one with batch renormalization.  The networks are trained with a batch size 
-of `256`. Batch renormalization uses the parameters recommended by the 
-paper (e.g. an `alpha = 0.01` - see `example/mnist_renorm_experiment1.m` 
-for the details).
+To explore the effect of batch renormalization, we run some simple
+experiments on MNIST. In the original paper ImageNet is used (so MNIST 
+experiments should be taken with an appropriately large bucket of salt).
+
+We begin by reproducing the first experiment in the paper i.e. that batch 
+renormalization does not perform worse than standard batch normalization 
+when training with reasonably large batch sizes.
+
+In the experiment below, we train three simple networks - one with no feature 
+normalization, one with batch normalization and one with batch renormalization.
+The networks are trained with a batch size of `256`. Batch renormalization uses 
+the parameters recommended by the paper (e.g. an `alpha = 0.01` - 
+see `example/mnist_renorm_experiment1.m` for the details). The results seem to 
+support the claim of the paper.
 
 ![256-batch](fig/exp1-bs-256.jpg)
 
-Next we drop the batch size to `128`, and we see renormalization hinting at a 
-modest improvement:
+Next we drop the batch size to `128` and we see renormalization hinting at a 
+modest improvement over standard batch normalization, but we also see that the
+advantages of normalizing have been reduced.
 
 ![128-batch](fig/exp1-bs-128.jpg)
 
-Dropping the batch size further to `64`, we see this effect repeated, but the 
-advantages of normalizing have also been reduced.
+Dropping the batch size further to `64`, we see this effect repeated:
 
 ![64-batch](fig/exp1-bs-064.jpg)
 
@@ -61,15 +68,11 @@ below).  These could probably be addressed with more a more careful tuning of
 
 ![32-batch](fig/exp1-bs-032.jpg)
 
-Notes
+### Notes
 
 The motivation for *batch renormalization* is to fix the issues that batch 
 normalization can exhibit when training with small minibatches (or 
-minibatches which do not consist of independent samples). The proposed 
-solution is quite simple, and resolves the need to change the behaviour of the 
-layer during training and test time.
-
-Recall that to perform 
+minibatches which do not consist of independent samples). Recall that to perform 
 [batch normalization](https://arxiv.org/abs/1502.03167), features are normalised 
 with using the statistics of the *current minibatch* during training:
 
@@ -120,8 +123,6 @@ where
   r_max          := a hyperparameter chosen to constrain r
   d_max          := a hyperparameter chosen to constrain d
 ```
-
-but if you play around with it, you might come up with something better :)
 
 During training, the layer is initialised with `r_max = 1, d_max = 0` 
 (matching standard batch norm). These values are gradually relaxed over time.
