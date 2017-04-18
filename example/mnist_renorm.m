@@ -85,9 +85,6 @@ if rn, x = vl_nnbrenorm_auto(x, clips, renormLR{:}) ; end
 x = vl_nnrelu(x) ;
 x = vl_nnconv(x, 'size', [1, 1, 500, 10], 'weightScale', 0.01) ;
 
-%   % diagnose outputs of conv layers
-%   Layer.setDiagnostics(x.find(@vl_nnconv), true) ;
-
 % diagnose all Params associated with conv layers (1 depth up from them)
 convs = x.find(@vl_nnconv) ;
 convParams = cellfun(@(x) {x.find('Param', 'depth', 1)}, convs) ;

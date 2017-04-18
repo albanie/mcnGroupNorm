@@ -6,15 +6,6 @@ function mnist_renorm_experiment1
 %   Dependence in Batch-Normalized Models." arXiv preprint 
 %   arXiv:1702.03275 (2017).
 
-
-% ---------------------
-% batch renormalization
-% ---------------------
-
-% To demonstrate the role of batch renormalization, it is necessary to 
-% examine the impact of batch size on batch normalization. In the following,
-% we first train a model on mnist with a reasonably large batch size.
-
 warmupEpochs = 5 ;
 transitionEpochs = 5 ;
 lastEpochs = 20 ;
