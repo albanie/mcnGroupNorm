@@ -1,4 +1,4 @@
-## Batch Renormalization
+Batch Renormalization
 
 This module provides some code to experiment with batch renormalization, 
 as described in [this recent arxiv paper](https://arxiv.org/abs/1702.03275).
@@ -12,18 +12,62 @@ vl_contrib('install', 'mcnBReNorm', 'contribUrl', 'github.com/albanie/matconvnet
 vl_contrib('setup', 'mcnBReNorm', 'contribUrl', 'github.com/albanie/matconvnet-contrib-test/') ;
 ```
 
-The example experiments use the [autonn module]() (although this is not required to use the `vl_nnbrenorm` function), which can be installed as follows:
+The example experiments use the [autonn module]() (although this is not 
+required to use the `vl_nnbrenorm` function), which can be installed as follows:
 
 ```
 vl_contrib('install', 'autonn') ;
 vl_contrib('setup', 'autonn') ;
 ```
 
+### Experiments
 
-### Notes
+Our first goal is to verify the first experiment in the paper i.e. that batch 
+renormalization does actively make things worse when we are training with 
+reasonably large batch sizes.  In the experiment below, we train three simple 
+networks - one with no feature normalization, one with batch normalization and 
+one with batch renormalization.  The networks are trained with a batch size 
+of `256`. Batch renormalization uses the parameters recommended by the 
+paper (e.g. an `alpha = 0.01` - see `example/mnist_renorm_experiment1.m` 
+for the details).
 
-The motivation for *batch renormalization* is to fix the issues that batch normalization can exhibit when training with small minibatches (or minibatches which do not consist of independent samples). The proposed solution is quite simple, and resolves the need to change the 
-behaviour of the layer during training and test time.  
+![256-batch](fig/exp1-bs-256.jpg)
+
+Next we drop the batch size to `128`, and we see renormalization hinting at a 
+modest improvement:
+
+![128-batch](fig/exp1-bs-128.jpg)
+
+Dropping the batch size further to `64`, we see this effect repeated, but the 
+advantages of normalizing have also been reduced.
+
+![64-batch](fig/exp1-bs-064.jpg)
+
+We can take this to an extreme by dropping the batch size all the way down 
+to `4`.  At this batch size, the baseline no longer converges with the same 
+learning rate so it is left out of the comparison. This is one of the intended 
+use cases for batch renorm, and it seems to offer some additional stability 
+here:
+
+![4-batch](fig/exp1-bs-004.jpg)
+
+Just as a final note, once the values of `r` and `d` have been relaxed (see 
+below for explanation of notation), batch nenormalization occasionally 
+exhibits slightly pathological behaviour, particularly on small batches when 
+there is a large difference between the statistics of the minibatch and the 
+rest of the training set (see an example of training with a batch size of `32` 
+below).  These could probably be addressed with more a more careful tuning of 
+`alpha` and the learning rates of the network:
+
+![32-batch](fig/exp1-bs-032.jpg)
+
+Notes
+
+The motivation for *batch renormalization* is to fix the issues that batch 
+normalization can exhibit when training with small minibatches (or 
+minibatches which do not consist of independent samples). The proposed 
+solution is quite simple, and resolves the need to change the behaviour of the 
+layer during training and test time.
 
 Recall that to perform 
 [batch normalization](https://arxiv.org/abs/1502.03167), features are normalised 
@@ -42,7 +86,9 @@ where
   sigma_B := minibatch standard deviation
 ```
 
-To perform batch renormalization we make a small modification to this approach by normalizing instead with a mixture of the minibatch statistics *and* a rolling estimate of the feature statistics over many minibatches:
+To perform batch renormalization we make a small modification to this approach 
+by normalizing instead with a mixture of the minibatch statistics *and* a 
+rolling estimate of the feature statistics over many minibatches:
 
 
 ```
@@ -59,7 +105,11 @@ where
   
 ```
 
-The goal of these additional terms is to reduce the dependence of the normalisation on the current minibatch. If `r = 1` and `d = 0`, then batch renormalization simply performs standard batch normalization. In practice, the values of `r` and `d` can jump around quite a lot, particularly near the start of training.  The solution proposed in the paper is to  clip these values:
+The goal of these additional terms is to reduce the dependence of the 
+normalisation on the current minibatch. If `r = 1` and `d = 0`, then batch 
+renormalization simply performs standard batch normalization. In practice, 
+the values of `r` and `d` can jump around quite a lot, particularly near the 
+start of training.  The solution proposed in the paper is to clip these values:
 
 ```
 r := clip( mu_B / sigma, [1/r_max, r_max])
@@ -73,10 +123,5 @@ where
 
 but if you play around with it, you might come up with something better :)
 
-During training, the layer is initialised with `r_max = 1, d_max = 0` (matching standard batch norm). These values are gradually relaxed over time.
-
-### Experiments
-
-Our first goal is to verify the first experiment in the paper i.e. that batch renormalization does actively make things worse when we are training with reasonably large batch sizes.  In the experiment below, we train three simple networks - one with no feature normalization, one with batch normalization and one with batch renormalization.  The networks are trained with a batch size of `256`. Batch renormalization uses the parameters recommended by the paper (e.g. an `alpha = 0.01` - see `example/mnist_renorm_experiment1.m` for the details).
-
-![256-batch](fig/exp1-bs-256.jpg)
+During training, the layer is initialised with `r_max = 1, d_max = 0` 
+(matching standard batch norm). These values are gradually relaxed over time.
