@@ -1,29 +1,28 @@
 function [y, dzdg, dzdb, moments] = vl_nnbrenorm(x, g, b, moments, ...
                                                  clips, test, varargin) 
 %VL_NNBRENORM CNN batch renormalisation.
-%   Y = VL_NNBRENORM(X,G,B,R,D) applies batch renormalization to the input
-%   X. Batch renormalization is defined as:
+%   Y = VL_NNBRENORM(X,G,B,MOMENTS,CLIPS,TEST) applies batch renormalization 
+%   to the input X. Batch renormalization is defined as:
 %
 %      Y(i,j,k,t) = G(k) * X_HAT(i,j,k,t) + B(k)
 %
 %   where
 %      X_HAT(i,j,k,t) = R(k) * (X_HAT(i,j,k,t) - mu(k)) / sigma(k) + D(k)
-%
 %      mu(k) = mean_ijt X(i,j,k,t),
 %      sigma2(k) = mean_ijt (X(i,j,k,t) - mu(k))^2,
 %      sigma(k) = sqrt(sigma2(k) + EPSILON)
-%      R(k) = clip(sigma(k) / moments(2,k)), [1/rMax, rMax])
-%      D(k) = clip((mu(k) - moments(1,k))/ moments(2,k)), [-dMax, dMax])
+%      R(k) = cutoff(sigma(k) / moments(2,k)), [1/rMax, rMax])
+%      D(k) = cutoff((mu(k) - moments(1,k))/ moments(2,k)), [-dMax, dMax])
+%      rMax = clips(1) 
+%      dMax = clips(2) 
 %
-%   and we define clip(x, [a b]) to be the operation that clips the value
-%   of x to lie inside the range [a b].
-%   are respectively the per-channel mean, variance, and standard
-%   deviation of each feature channel in the data X. The parameters
-%   G(k) and B(k) are multiplicative and additive constants use to
-%   scale each data channel, while R(k) and D(k) are used to balance the 
-%   current estimate of feature means and variances between the statistics
-%   gathered from the current mini-batch, and rolling averages over previous
-%   mini-batches, as discussed in the paper:
+%   and we define cutoff(x, [a b]) to be the operation that clips the value
+%   of x to lie inside the range [a b]. The parameters G(k) and B(k) are 
+%   multiplicative and additive constants use to scale each data channel, 
+%   while R(k) and D(k) are used to balance the current estimate of feature 
+%   means and variances between the statistics gathered from the current 
+%   minibatch, and rolling averages over previous minibatches, as discussed 
+%   in the paper:
 %
 %  `Batch Renormalization: Towards Reducing Minibatch Dependence in
 %   Batch-Normalized Models` by Sergey Ioffe, 2017

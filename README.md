@@ -1,4 +1,4 @@
-Batch Renormalization
+## Batch Renormalization
 
 This module provides some code to experiment with batch renormalization, 
 as described in [this recent arxiv paper](https://arxiv.org/abs/1702.03275).
