@@ -71,7 +71,7 @@ where
   d_max          := a hyperparameter chosen to constrain d
 ```
 
-but if you play around with it, you might come up with something better :)  
+but if you play around with it, you might come up with something better :)
 
 During training, the layer is initialised with `r_max = 1, d_max = 0` (matching standard batch norm). These values are gradually relaxed over time.
 

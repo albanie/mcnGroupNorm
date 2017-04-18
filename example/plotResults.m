@@ -1,9 +1,16 @@
 function plotResults(results)
 
+% set y limits to prevent matlab following anomolies
+if results(1).batchSize == 4
+  ylims = [ 0 0.3 ; 0 0.1 ] ;
+else
+  ylims = [ 0 0.1 ; 0 0.05 ] ;
+end
+
 figure(1) ; clf ;
 subplot(1,2,1) ;
 hold all ;
-styles = {'o-', '+--', '+-'} ;
+styles = {'o-', '+--', '+-', '.-'} ;
 for i = 1:numel(results)
   semilogy([results(i).info.val.objective]', styles{i}) ; 
 end
@@ -13,7 +20,7 @@ h = legend(results(:).name) ;
 set(h,'color','none');
 batchSize = results(1).batchSize ;
 title(sprintf('objective-(bs%d)', batchSize)) ;
-ylim([0 0.1]) ;
+ylim(ylims(1,:)) ;
 subplot(1,2,2) ;
 hold all ;
 for i = 1:numel(results)
@@ -24,10 +31,10 @@ grid on ;
 xlabel('Training samples [x 10^3]'); ylabel('error') ;
 set(h,'color','none') ;
 title(sprintf('error-(bs%d)', batchSize)) ;
-ylim([0 0.05]) ;
+ylim(ylims(2,:)) ;
 drawnow ;
 
 % this is a function for plotting figures in the terminal
 % (the function can be found at https://github.com/albanie/zvision)
 % but can be commented out if you are using a normal GUI
-zv_dispFig ;
+zs_dispFig ;
