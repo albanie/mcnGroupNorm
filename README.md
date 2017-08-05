@@ -1,15 +1,21 @@
 ## Batch Renormalization
 
 This module provides some code to experiment with batch renormalization, 
-as described in [this recent arxiv paper](https://arxiv.org/abs/1702.03275).
+as described in the [paper](https://arxiv.org/abs/1702.03275):
+
+```
+Batch Renormalization: Towards Reducing Minibatch Dependence in Batch-Normalized Models
+By Sergey Ioffe, arXiv preprint arXiv:1702.03275 (2017)
+```
+
 
 ### Install
 
 The module is easiest to install with the `vl_contrib` package manager:
 
 ```
-vl_contrib('install', 'mcnBReNorm', 'contribUrl', 'github.com/albanie/matconvnet-contrib-test/') ;
-vl_contrib('setup', 'mcnBReNorm', 'contribUrl', 'github.com/albanie/matconvnet-contrib-test/') ;
+vl_contrib('install', 'mcnBReNorm') ;
+vl_contrib('setup', 'mcnBReNorm') ;
 ```
 
 The example experiments use the [autonn](https://github.com/vlfeat/autonn) 
@@ -23,20 +29,12 @@ vl_contrib('setup', 'autonn') ;
 
 ### Experiments
 
-To explore the effect of batch renormalization, we run some simple
-experiments on MNIST. In the original paper ImageNet is used (so MNIST 
-experiments should be taken with an appropriately large bucket of salt).
+To explore the effect of batch renormalization, we can run some simple experiments on MNIST. In the original paper ImageNet is used (so MNIST experiments should be taken with an appropriately large bucket of salt).
 
-We begin by reproducing the first experiment in the paper i.e. that batch 
-renormalization does not perform worse than standard batch normalization 
-when training with reasonably large batch sizes.
+The initial goal is to reproduce the first experiment in the paper i.e. that batch renormalization does not perform worse than standard batch normalization when training with reasonably large batch sizes.
 
-In the experiment below, we train three simple networks - one with no feature 
-normalization, one with batch normalization and one with batch renormalization.
-The networks are trained with a batch size of `256`. Batch renormalization uses 
-the parameters recommended by the paper (e.g. an `alpha = 0.01` - 
-see `example/mnist_renorm_experiment1.m` for the details). The results seem to 
-support the claim of the paper.
+In the experiment below, we train three simple networks - one with no feature normalization, one with batch normalization and one with batch renormalization.
+The networks are trained with a batch size of `256`. Batch renormalization uses the parameters recommended by the paper (e.g. an `alpha = 0.01` - see `example/mnist_renorm_experiment1.m` for the details). The results seem to support the claim of the paper.
 
 ![256-batch](fig/exp1-bs-256.jpg)
 
