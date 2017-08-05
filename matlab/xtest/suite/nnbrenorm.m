@@ -11,23 +11,21 @@ classdef nnbrenorm < nntest
       c = cols ;
       nd = numDims ;
       bs = batchSize ;
-      x = test.randn(r, c, nd, bs) ;
-      %g = test.randn(1, 1, nd, 1) ;
-      %b = test.randn(1, 1, nd, 1) ;
-      clips = [1 0] ;
+      x = test.randn(r, c, nd, bs) ; clips = [1 0] ;
       moments = test.randn(nd, 2) ;
       g = test.randn(1, 1, nd) / test.range ;
       b = test.randn(1, 1, nd) / test.range ;
+      testMode = 0 ; % training mode
 
-      y = vl_nnbrenorm(x, g, b, moments, clips) ;
+      y = vl_nnbrenorm(x, g, b, moments, clips, testMode) ;
       dzdy = test.randn(size(y)) ;
-      [dzdx,dzdg,dzdb] = vl_nnbrenorm(x, g, b, moments, clips, dzdy) ;
+      [dzdx,dzdg,dzdb] = vl_nnbrenorm(x, g, b, moments, clips, testMode, dzdy) ;
 
-      test.der(@(x) vl_nnbrenorm(x, g, b, moments, clips), ...
+      test.der(@(x) vl_nnbrenorm(x, g, b, moments, clips, testMode), ...
                            x, dzdy, dzdx, test.range * 1e-3) ;
-      test.der(@(g) vl_nnbrenorm(x, g, b, moments, clips), ...
+      test.der(@(g) vl_nnbrenorm(x, g, b, moments, clips, testMode), ...
                            g, dzdy, dzdg, 1e-2) ;
-      test.der(@(b) vl_nnbrenorm(x, g, b, moments, clips), ...
+      test.der(@(b) vl_nnbrenorm(x, g, b, moments, clips, testMode), ...
                            b, dzdy, dzdb, 1e-3) ;
     end
   end
