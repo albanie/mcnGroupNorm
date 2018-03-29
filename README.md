@@ -18,17 +18,19 @@ vl_contrib('setup', 'mcnGroupNorm') ;
 ```
 
 The example experiments use the [autonn](https://github.com/vlfeat/autonn) 
-module (although this is not required to use the `vl_nngnorm` function), 
-which can be installed as follows:
+module (although this is not required to use the `vl_nngnorm` function). Similarly, 
+to provide comparisons with batch renormalization, [mcnBReNorm](https://github.com/albanie/mcnBReNorm) is also used.
 
 ```
 vl_contrib('install', 'autonn') ;
 vl_contrib('setup', 'autonn') ;
+vl_contrib('install', 'mcnBReNorm') ;
+vl_contrib('setup', 'mcnBReNorm') ;
 ```
 
 ### Experiments
 
-To explore the effect of batch renormalization, we can run some simple experiments on MNIST. In the original paper ImageNet is used (so MNIST experiments should be taken with an appropriately large bucket of salt).
+To explore the effect of group normalization, we can run some simple experiments on MNIST and compare with competing approaches to feature normalization, including batch norm, batch renormalization, . In the original paper ImageNet is used (so MNIST experiments should be taken with an appropriately large bucket of salt).
 
 The initial goal is to reproduce the first experiment in the paper i.e. that batch renormalization does not perform worse than standard batch normalization when training with reasonably large batch sizes.
 
