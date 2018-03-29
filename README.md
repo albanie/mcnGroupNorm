@@ -1,25 +1,24 @@
-## Batch Renormalization
+## Group Normalization
 
-This module provides some code to experiment with batch renormalization, 
-as described in the [paper](https://arxiv.org/abs/1702.03275):
+This module provides some code to experiment with group normalization, 
+as described in the [paper](https://arxiv.org/abs/1803.08494):
 
 ```
-Batch Renormalization: Towards Reducing Minibatch Dependence in Batch-Normalized Models
-By Sergey Ioffe, arXiv preprint arXiv:1702.03275 (2017)
+Group Normalization, Yuxin Wu, Kaiming He,
+arXiv preprint arXiv:1803.08494 (2018)
 ```
-
 
 ### Install
 
 The module is easiest to install with the `vl_contrib` package manager:
 
 ```
-vl_contrib('install', 'mcnBReNorm') ;
-vl_contrib('setup', 'mcnBReNorm') ;
+vl_contrib('install', 'mcnGroupNorm') ;
+vl_contrib('setup', 'mcnGroupNorm') ;
 ```
 
 The example experiments use the [autonn](https://github.com/vlfeat/autonn) 
-module (although this is not required to use the `vl_nnbrenorm` function), 
+module (although this is not required to use the `vl_nngnorm` function), 
 which can be installed as follows:
 
 ```
