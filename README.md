@@ -18,14 +18,17 @@ vl_contrib('setup', 'mcnGroupNorm') ;
 ```
 
 The example experiments use the [autonn](https://github.com/vlfeat/autonn) 
-module (although this is not required to use the `vl_nngnorm` function). Similarly, 
-to provide comparisons with batch renormalization, [mcnBReNorm](https://github.com/albanie/mcnBReNorm) is also used.
+module (although this is not required to use the `vl_nngnorm` function). The
+implementation of the `vl_nngnorm` function, together with an implementation of
+batch renormalization can be found in 
+[mcnExtraLayers](https://github.com/albanie/mcnExtraLayers).
+
 
 ```
 vl_contrib('install', 'autonn') ;
 vl_contrib('setup', 'autonn') ;
-vl_contrib('install', 'mcnBReNorm') ;
-vl_contrib('setup', 'mcnBReNorm') ;
+vl_contrib('install', 'mcnExtraLayers') ;
+vl_contrib('setup', 'mcnExtraLayers') ;
 ```
 
 ### Experiments
