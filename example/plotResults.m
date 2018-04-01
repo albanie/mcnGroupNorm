@@ -1,6 +1,6 @@
 function plotResults(results)
 
-opts.enforceAxis = false ;
+opts.enforceAxis = true ;
 % set y limits to prevent matlab following anomolies
 if opts.enforceAxis
   if results(1).batchSize == 4
@@ -14,11 +14,9 @@ figure(1) ; clf ;
 subplot(1,2,1) ;
 hold all ;
 styles = {'o-', '+--', '+-', '.-'} ;
-keyboard
 for i = 1:numel(results)
   semilogy([results(i).info.val.objective]', styles{i}) ;
 end
-keyboard
 xlabel('Training samples [x 10^3]') ; ylabel('energy') ;
 grid on ;
 h = legend(results(:).name) ;

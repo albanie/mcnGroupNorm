@@ -19,20 +19,26 @@ function mnist_feat_norm_exp1
   clips = [ warmup ; steady ; last ] ;
 
 
-  results_big = runner(256, clips) ;
-  %results_medium = runner(128, clips) ;
-  %results_small = runner(64, clips) ;
-  %results_tiny = runner(32, clips) ;
-  %results_mini = runner(16, clips) ;
-  %results_v_mini = runner(4, clips) ;
-  keyboard
+  %results_big = runner(256, clips) ;
+  %plotResults(results_big)  ;
 
-  plotResults(results_big)  ;
+  %results_medium = runner(128, clips) ;
   %plotResults(results_medium)  ;
+
+  %results_small = runner(64, clips) ;
   %plotResults(results_small)  ;
+
+  %results_tiny = runner(32, clips) ;
   %plotResults(results_tiny)  ;
-  %plotResults(results_v_mini)  ;
+
+  %results_mini = runner(16, clips) ;
   %plotResults(results_mini)  ;
+
+  %results_v_mini = runner(4, clips) ;
+  %plotResults(results_v_mini)  ;
+
+  results_vv_mini = runner(2, clips) ;
+  plotResults(results_vv_mini)  ;
 
 % ------------------------------------------
 function results = runner(batchSize, clips)
@@ -45,15 +51,16 @@ function results = runner(batchSize, clips)
   expRoot = fullfile(vl_rootnn, 'data/mnist-exps/exp1') ;
   results = struct() ;
 
+  % debug
   opts = {{'train', train} , ...
           {'train', train, 'batchNormalization', 1}, ...
-          {'train', train, 'groupNormalization', 1, 'numGroups', 10}, ...
+          {'train', train, 'groupNormalization', 1, 'numGroups', 2}, ...
           {'train', train, 'batchRenormalization', 1, ...
            'clips', clips, 'alpha', 0.01}, ...
            } ;
   names = {'BSLN', 'BNORM', 'GNORM', 'RENORM'} ;
-  if batchSize <= 32
-    opts(1) = [] ;
+  if batchSize <= 16
+    opts(1) = [] ; % the baseline would require modification to work
     names(1) = [] ;
   end
   for i = 1:numel(names)

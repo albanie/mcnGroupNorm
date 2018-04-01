@@ -29,7 +29,7 @@ rn = opts.batchRenormalization ;
 if bn
   sfx = '-bn' ;
 elseif gn
-  sfx = '-gn' ;
+  sfx = sprintf('-gn-%d', opts.numGroups) ;
 elseif rn
   sfx = sprintf('-rn-%g', opts.alpha) ;
 else
