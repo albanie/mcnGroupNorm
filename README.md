@@ -30,7 +30,7 @@ vl_contrib('setup', 'autonn') ;
 
 To explore the effect of group normalization, we can run some simple experiments on MNIST and compare with competing approaches to feature normalization (here we compare vs batch normalization and batch renormalization). In the original paper ImageNet is used (so MNIST experiments should be taken with an appropriately large bucket of salt).  The experiments below are based on modifying a simple LeNet (see [mnist\_feat\_norm.m](example/mnist_feat_norm.m) for architecture configuration).
 
-In all experiments, the baseline (no feature normalization) is trained with a learning rate of `0.001` (higher learning rates tend to cause the gradients to explode), while each feature normalized method uses a learning rate of `0.01`.  It's certainly possible to obtain better performance than reported here with better hyperparam tuning, but the general purpose of these experiments is to get a sense of the stability of the methods.  Batch renormalization uses the parameters recommended by the paper (e.g. an `alpha = 0.01` - see `example/mnist_feat_norm_exp1.m` for the details).
+In all experiments, the baseline (no feature normalization, minibatch size `256`) is trained with a learning rate of `0.001` (higher learning rates tend to cause the gradients to become unstable), while each feature normalized method uses a learning rate of `0.01`.  As the batch size is reduced, the learning rate is scaled linearly, following the approach described [here](https://arxiv.org/abs/1706.02677). It's certainly possible to obtain better performance than reported here with better hyperparam tuning, but the general purpose of these experiments is to get a sense of the stability of the methods.  Batch renormalization uses the parameters recommended by the paper (e.g. an `alpha = 0.01` - see `example/mnist_feat_norm_exp1.m` for the details).
 
 As a more general note, these experiments are fairly preliminary so may contain mistakes (corrections are welcome).
 
@@ -46,19 +46,45 @@ Next we drop the batch size to `128` and we see renormalization hinting at a mod
 
 ![128-batch](fig/bs-128.jpg)
 
+### Batch size 64
+
 Dropping the batch size further to `64`, we see this effect repeated:
 
-![64-batch](fig/exp1-bs-064.jpg)
+![64-batch](fig/bs-64.jpg)
 
-We can take this to an extreme by dropping the batch size all the way down to `4`.  At this batch size, the baseline no longer converges with the same learning rate so it is left out of the comparison. This is one of the intended use cases for batch renorm, and it seems to offer some additional stability here:
+### Batch size 32
 
-![4-batch](fig/exp1-bs-004.jpg)
+![32-batch](fig/bs-32.jpg)
 
-Just as a final note, once the values of `r` and `d` have been relaxed (see below for explanation of notation), batch nenormalization occasionally exhibits slightly pathological behaviour, particularly on small batches when there is a large difference between the statistics of the minibatch and the rest of the training set (see an example of training with a batch size of `32` below).  These could probably be addressed with more a more careful tuning of `alpha` and the learning rates of the network:
+### Batch size 16
 
-![32-batch](fig/exp1-bs-032.jpg)
+The baseline tends to diverge, unless the learning rate is extremely low.
 
-### Notes
+![16-batch](fig/bs-16.jpg)
+
+### Batch size 4
+
+In the "very small" minibatch regime, batch normalization soon becomes unstable.  This is the problem that batch renormalization was designed to fix. Group norm remains stable.
+
+![4-batch](fig/bs-4.jpg)
+
+### Batch size 2
+
+At a batch size of 2, under the learning parameters described above, only group norm converges (the gradients of the other networks explode on the first epoch).
+
+![2-batch](fig/bs-2.jpg)
+
+### Batch size 1
+
+The same is true at a batch size of 1 (note that to save time, these networks were only trained for `10` epochs).
+
+![1-batch](fig/bs-1.jpg)
+
+### Notes for group normalization
+
+The implementation is fairly simple (code [here](https://github.com/albanie/mcnExtraLayers/blob/master/matlab/vl_nngnorm.m)).  The details are described in [this paper](https://arxiv.org/abs/1803.08494).
+
+### Notes for batch renormalization
 
 The motivation for *batch renormalization* is to fix the issues that batch normalization can exhibit when training with small minibatches (or minibatches which do not consist of independent samples). Recall that to perform [batch normalization](https://arxiv.org/abs/1502.03167), features are normalised with using the statistics of the *current minibatch* during training:
 
