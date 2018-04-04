@@ -1,6 +1,8 @@
 ## Group Normalization
 
-This module provides some code to experiment with group normalization, as described in the [paper](https://arxiv.org/abs/1803.08494), and to compare it with some other normalization methods with simple experiments.
+This module provides some code to experiment with group normalization, as described in [this paper](https://arxiv.org/abs/1803.08494), and to compare it with some other normalization methods with simple experiments.
+
+Reference:
 
 ```
 Group Normalization, Yuxin Wu, Kaiming He,
@@ -28,11 +30,11 @@ vl_contrib('setup', 'autonn') ;
 
 ### Experiments
 
-To explore the effect of group normalization, we can run some simple experiments on MNIST and compare with competing approaches to feature normalization (here we compare vs batch normalization and batch renormalization). In the original paper ImageNet is used (so MNIST experiments should be taken with an appropriately large bucket of salt).  The experiments below are based on modifying a simple LeNet (see [mnist\_feat\_norm.m](example/mnist_feat_norm.m) for architecture configuration).
+To explore the effect of group normalization, we can run some simple experiments on MNIST and compare with competing approaches to feature normalization (here we compare against batch normalization and batch renormalization). In the original paper ImageNet is used (so MNIST experiments should be taken with an appropriately large bucket of salt).  The experiments below are based on modifying a simple LeNet (see [mnist\_feat\_norm.m](example/mnist_feat_norm.m) for architecture configuration).
 
-In all experiments, the baseline (no feature normalization, minibatch size `256`) is trained with a learning rate of `0.001` (higher learning rates tend to cause the gradients to become unstable), while each feature normalized method uses a learning rate of `0.01`.  As the batch size is reduced, the learning rate is scaled linearly, following the approach described [here](https://arxiv.org/abs/1706.02677). It's certainly possible to obtain better performance than reported here with better hyperparam tuning, but the general purpose of these experiments is to get a sense of the stability of the methods.  Batch renormalization uses the parameters recommended by the paper (e.g. an `alpha = 0.01` - see `example/mnist_feat_norm_exp1.m` for the details).
+In all experiments, the baseline (no feature normalization, minibatch size `256`) is trained with a learning rate of `0.001` (higher learning rates without normalization tend to cause the gradients to become unstable), while each feature normalized method uses a learning rate of `0.01`.  As the batch size is reduced, the learning rate is scaled linearly, following the approach described [here](https://arxiv.org/abs/1706.02677). It's almost certainly possible to obtain better performance than reported here with better hyperparam tuning.  However, the purpose of these experiments is simply to get a sense of the stability of the methods.  Batch renormalization uses the parameters recommended by the paper (e.g. an `alpha = 0.01` - see `example/mnist_feat_norm_exp1.m` for the details).
 
-As a more general note, these experiments are fairly preliminary so may contain mistakes (corrections are welcome).
+As a more general note, these experiments are fairly preliminary (i.e. may contain mistakes, so corrections are welcome).
 
 ### Batch size 256
 
