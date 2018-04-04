@@ -1,6 +1,6 @@
 ## Group Normalization
 
-This module provides some code to experiment with group normalization, as described in the [paper](https://arxiv.org/abs/1803.08494):
+This module provides some code to experiment with group normalization, as described in the [paper](https://arxiv.org/abs/1803.08494), and to compare it with some other normalization methods with simple experiments.
 
 ```
 Group Normalization, Yuxin Wu, Kaiming He,
@@ -28,18 +28,23 @@ vl_contrib('setup', 'autonn') ;
 
 ### Experiments
 
-To explore the effect of group normalization, we can run some simple experiments on MNIST and compare with competing approaches to feature normalization, including batch norm, batch renormalization, . In the original paper ImageNet is used (so MNIST experiments should be taken with an appropriately large bucket of salt).
+To explore the effect of group normalization, we can run some simple experiments on MNIST and compare with competing approaches to feature normalization (here we compare vs batch normalization and batch renormalization). In the original paper ImageNet is used (so MNIST experiments should be taken with an appropriately large bucket of salt).  The experiments below are based on modifying a simple LeNet (see [mnist\_feat\_norm.m](example/mnist_feat_norm.m) for architecture configuration).
 
-The initial goal is to reproduce the first experiment in the paper i.e. that batch renormalization does not perform worse than standard batch normalization when training with reasonably large batch sizes.
+In all experiments, the baseline (no feature normalization) is trained with a learning rate of `0.001` (higher learning rates tend to cause the gradients to explode), while each feature normalized method uses a learning rate of `0.01`.  It's certainly possible to obtain better performance than reported here with better hyperparam tuning, but the general purpose of these experiments is to get a sense of the stability of the methods.  Batch renormalization uses the parameters recommended by the paper (e.g. an `alpha = 0.01` - see `example/mnist_feat_norm_exp1.m` for the details).
 
-In the experiment below, we train three simple networks - one with no feature normalization, one with batch normalization and one with batch renormalization.
-The networks are trained with a batch size of `256`. Batch renormalization uses the parameters recommended by the paper (e.g. an `alpha = 0.01` - see `example/mnist_renorm_experiment1.m` for the details). The results seem to support the claim of the paper.
+As a more general note, these experiments are fairly preliminary so may contain mistakes (corrections are welcome).
 
-![256-batch](fig/exp1-bs-256.jpg)
+### Batch size 256
+
+Each of the feature normalization methods perform comparably aagainst the unnormalized baseline, which supports the claim that group norm can achieve similar performance to batch norm at moderate batch sizes.
+
+![256-batch](fig/bs-256.jpg)
+
+### Batch size 128
 
 Next we drop the batch size to `128` and we see renormalization hinting at a modest improvement over standard batch normalization, but we also see that the advantages of normalizing have been reduced.
 
-![128-batch](fig/exp1-bs-128.jpg)
+![128-batch](fig/bs-128.jpg)
 
 Dropping the batch size further to `64`, we see this effect repeated:
 
